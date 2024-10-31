@@ -9,57 +9,63 @@ port = 14447
 global CLIENTS
 CLIENTS = {}
 
-async def generateNewClient(writer,reader,username,addr):
+async def generateNewClient(writer,reader,username,addr,userid):
     newclient = Client(writer,reader,username, addr)
-    CLIENTS[uuid.uuid4()] = newclient
-    print(CLIENTS)
+    CLIENTS[userid] = newclient
+    print(CLIENTS[userid])
 
 
-async def joinEvent(writeradrr):
+async def joinEvent(userid):
         for id in CLIENTS:
             writer = CLIENTS[id].writer
-            servermessage = f"{CLIENTS[id].username} a rejoint la chatroom".encode("utf-8")
+            servermessage = f"{CLIENTS[userid].username} a rejoint la chatroom".encode("utf-8")
             writer.write(servermessage)
         return
 
 
-async def leaveEvent(writeradrr):
+async def leaveEvent(userid):
     for id in CLIENTS:
         writer = CLIENTS[id].writer
         if CLIENTS[id].username == '':
-            CLIENTS[id].username = CLIENTS[id].writer
+            CLIENTS[id].username = CLIENTS[userid].writer
         servermessage = f"{CLIENTS[id].username} a quitté la chatroom".encode("utf-8")
         writer.write(servermessage)
     return
     
 
-async def sendAll(message, writeradrr):
+async def sendAll(message, userid):
     for id in CLIENTS:
         writer = CLIENTS[id].writer
-        servermessage = f"{CLIENTS[id].user} : {message}".encode("utf-8")
+        servermessage = f"{CLIENTS[userid].username} : {message}".encode("utf-8")
         writer.write(servermessage)
     return
 
 async def handle_packet(reader, writer):
+    userid = uuid.uuid4()
     addr = writer.get_extra_info('peername')   
-    while True:
+
+    while True: # Gestion Pseudo
+        data = await reader.read(100)
+        message = data.decode('utf-8')
+        if not data:
+            await asyncio.sleep(0.05)
+        if re.match(r'^[a-z0-9_-]{3,15}$', message):
+                await generateNewClient(writer,reader,message,addr,userid)
+                await joinEvent(userid)
+                break
+    while True: # Gestion messages
         data = await reader.read(100)
         message = data.decode('utf-8')
         if not data:
             await asyncio.sleep(0.05)
         print(f"Message received from {addr[0]!r}:{addr[1]!r} :{message!r}")
         if data == b'': # Gestion de la déco relou le loup
-            await leaveEvent(addr)
+            await leaveEvent(userid)
             writer.close()
             await writer.wait_closed()
             return
-        if CLIENTS[id].username == '':
-            if re.match(r'^[a-z0-9_-]{3,15}$', message):
-                CLIENTS[id].username = message
-                generateNewClient(writer,reader,message,addr)
-                await joinEvent(addr)
         else:
-            await sendAll(message, addr)
+            await sendAll(message, userid)
        
         await writer.drain()
         
