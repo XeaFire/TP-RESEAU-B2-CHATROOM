@@ -1,10 +1,19 @@
 import asyncio
 import re
 import uuid
+from os import environ
 
 from packages.models import Client
-host = '5.5.5.1'
-port = 14447
+
+MAX_USERS = environ.get("MAX_USERS")
+MAX_USERS = MAX_USERS if MAX_USERS is not None else 20
+
+LISTENING_PORT = environ.get("LISTENING_PORT")
+LISTENING_PORT = LISTENING_PORT if LISTENING_PORT is not None else 14447
+
+host = '0.0.0.0'
+port = LISTENING_PORT
+max_users = MAX_USERS
 
 global CLIENTS
 CLIENTS = {}
@@ -36,7 +45,10 @@ async def leaveEvent(userid):
 async def sendAll(message, userid):
     for id in CLIENTS:
         writer = CLIENTS[id].writer
-        servermessage = f"{CLIENTS[userid].username} : {message}".encode("utf-8")
+        if id == userid:
+            servermessage = f"{CLIENTS[userid].color}{CLIENTS[userid].username} : {message} \033[0m".encode("utf-8")
+        else:
+            servermessage = f"{CLIENTS[userid].color}Vous avez dit : {message} \033[0m".encode("utf-8")
         writer.write(servermessage)
     return
 
@@ -50,6 +62,9 @@ async def handle_packet(reader, writer):
         if not data:
             await asyncio.sleep(0.05)
         if re.match(r'^[a-z0-9_-]{3,15}$', message):
+                if len(CLIENTS) > max_users:
+                    print("Too Many users in the room !")
+                    return
                 await generateNewClient(writer,reader,message,addr,userid)
                 await joinEvent(userid)
                 break
@@ -84,3 +99,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+print("test")

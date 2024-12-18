@@ -1,3 +1,5 @@
+
+from ..utils import generateRandomColor
 class Client:
     def __init__(self, writer, reader, username, addr):
         self.writer = writer
@@ -5,3 +7,4 @@ class Client:
         self.reader = reader
         self.connected = True
         self.address = addr
+        self.color = generateRandomColor()
