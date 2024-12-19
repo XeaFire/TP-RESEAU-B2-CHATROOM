@@ -6,10 +6,10 @@ from os import environ
 from packages.models import Client
 
 MAX_USERS = environ.get("MAX_USERS")
-MAX_USERS = MAX_USERS if MAX_USERS is not None else 20
+MAX_USERS = int(MAX_USERS) if MAX_USERS is not None else 20
 
 LISTENING_PORT = environ.get("CHAT_PORT")
-LISTENING_PORT = LISTENING_PORT if LISTENING_PORT is not None else 14447
+LISTENING_PORT = int(LISTENING_PORT) if LISTENING_PORT is not None else 14447
 
 host = '0.0.0.0'
 port = LISTENING_PORT
