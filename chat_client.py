@@ -5,7 +5,7 @@ import aioconsole
 import re
 
 # On définit la destination de la connexion
-host = '5.5.5.11'  # IP du serveur
+host = 'localhost'  # IP du serveur
 port = 14447           # Port choisi par le serveur
 # Création de l'objet socket de type TCP (SOCK_STREAM)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
