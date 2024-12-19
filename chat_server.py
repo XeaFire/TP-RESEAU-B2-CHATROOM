@@ -8,7 +8,7 @@ from packages.models import Client
 MAX_USERS = environ.get("MAX_USERS")
 MAX_USERS = MAX_USERS if MAX_USERS is not None else 20
 
-LISTENING_PORT = environ.get("LISTENING_PORT")
+LISTENING_PORT = environ.get("CHAT_PORT")
 LISTENING_PORT = LISTENING_PORT if LISTENING_PORT is not None else 14447
 
 host = '0.0.0.0'
@@ -53,6 +53,9 @@ async def sendAll(message, userid):
     return
 
 async def handle_packet(reader, writer):
+    if len(CLIENTS) > max_users:
+                    print("Too Many users in the room !")
+                    return
     userid = uuid.uuid4()
     addr = writer.get_extra_info('peername')   
 
@@ -62,9 +65,6 @@ async def handle_packet(reader, writer):
         if not data:
             await asyncio.sleep(0.05)
         if re.match(r'^[a-z0-9_-]{3,15}$', message):
-                if len(CLIENTS) > max_users:
-                    print("Too Many users in the room !")
-                    return
                 await generateNewClient(writer,reader,message,addr,userid)
                 await joinEvent(userid)
                 break
